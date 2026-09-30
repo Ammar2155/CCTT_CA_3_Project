@@ -1,0 +1,24 @@
+# IDE
+.vscode/
+.idea/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Large Alibaba trace files
+traces/**/alibaba_trace_2018/*.csv
+
+# Python
+__pycache__/
+*.pyc
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+
+# Entire Alibaba trace folder
+traces/traces/alibaba_trace_2018/

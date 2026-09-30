@@ -1,0 +1,45 @@
+{
+  "classifier_service_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "52.91.173.158"
+  },
+  "flat_vm_ids": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "i-0198d3ebdcd6846c6",
+      "i-03a8809e29629911b"
+    ]
+  },
+  "flat_vm_ips": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "34.203.209.164",
+      "54.145.191.44"
+    ]
+  },
+  "nested_host_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-0f0c80f0dbee31e0a"
+  },
+  "nested_host_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "54.196.45.143"
+  }
+}

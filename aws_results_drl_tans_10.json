@@ -1,0 +1,68 @@
+{
+  "mode": "drl_tans",
+  "n_jobs": 10,
+  "makespan": 7.257197856903076,
+  "mean_elapsed": 5.760129594802857,
+  "results": [
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 6.1010963916778564,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 4.976338148117065,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 7.219105243682861,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 4.915180206298828,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 4.9991371631622314,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 7.257197856903076,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 4.985010623931885,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 4.9494781494140625,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 4.956047534942627,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0f0c80f0dbee31e0a",
+      "elapsed": 7.242704629898071,
+      "status": "Success"
+    }
+  ]
+}

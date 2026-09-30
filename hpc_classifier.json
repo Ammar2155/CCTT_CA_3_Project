@@ -1,0 +1,23 @@
+{
+  "feature_order": [
+    "cpu_request",
+    "mem_request",
+    "duration_norm",
+    "io_intensity"
+  ],
+  "weights": [
+    5.89931248146581,
+    0.27170812510602915,
+    -19.205321618909984,
+    0.0
+  ],
+  "bias": 1.1675093099299476,
+  "threshold": 0.5,
+  "held_out_metrics": {
+    "accuracy": 0.871319775357386,
+    "precision": 0.7981657159065587,
+    "recall": 0.5873553354825107,
+    "f1": 0.6767228704732651
+  },
+  "note": "HPC=1 if sigmoid(w.x + b) >= threshold, else HTC=0"
+}

@@ -1,0 +1,188 @@
+{
+  "mode": "drl_tans",
+  "n_jobs": 30,
+  "makespan": 7.4576146602630615,
+  "mean_elapsed": 5.339661423365275,
+  "results": [
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 6.5624470710754395,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.934612512588501,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.201689004898071,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 5.074045896530151,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.94452428817749,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.450096130371094,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.967545509338379,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 5.045154571533203,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.9277238845825195,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.975902557373047,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.180283069610596,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 2.6732473373413086,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 5.096133708953857,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.936663627624512,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 5.022472381591797,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.250150442123413,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 5.004238843917847,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 2.622523069381714,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.9478466510772705,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.346775770187378,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.888563632965088,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.959105730056763,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.4576146602630615,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.186315059661865,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 5.012893199920654,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 2.619753837585449,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.926454544067383,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 2.7853341102600098,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 7.269313097000122,
+      "status": "Success"
+    },
+    {
+      "class": "HTC",
+      "target": "i-0e020573dac1cead2",
+      "elapsed": 4.9204185009002686,
+      "status": "Success"
+    }
+  ]
+}
