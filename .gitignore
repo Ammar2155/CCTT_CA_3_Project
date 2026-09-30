@@ -1,24 +1,29 @@
-# IDE
-.vscode/
-.idea/
+# Security & Keys
+hpnts-key.pem
+*.pem
 
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-
-# Large Alibaba trace files
-traces/**/alibaba_trace_2018/*.csv
-
-# Python
-__pycache__/
-*.pyc
-
-# Terraform
+# Files > 100MB (Large Files)
+# Terraform binaries (e.g. terraform-provider-aws ~685MB)
 .terraform/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 
-# Entire Alibaba trace folder
-traces/traces/alibaba_trace_2018/
+# Alibaba trace files (e.g. batch_task.csv ~765MB, hire_workload_jobs.csv ~605MB)
+traces/
+*.csv
+
+# Java Compiled Classes & Build Artifacts
+*.class
+out/
+bin/
+build/
+target/
+
+# Python Cache & Virtual Environments
+__pycache__/
+*.pyc
+
+# IDE Settings
+.vscode/
+.idea/
