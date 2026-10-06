@@ -1,15 +1,3 @@
-############################################################
-# HPNTS AWS validation environment (Phase 3)
-#
-# 2x flat-VM tier (c6i.xlarge, on-demand: predictable perf for the
-#   high-priority HPC comparison) + 1x t3.large running 8 Docker
-#   containers as the nested tier (mirrors the 2-flat/8-nested split
-#   in HPNTS_Comparative_Project.java).
-#
-# Spot pricing on the nested tier to keep validation-run costs low;
-# use `terraform destroy` (or aws_deploy/teardown.sh) after each run.
-############################################################
-
 terraform {
   required_providers {
     aws = { source = "hashicorp/aws", version = "~> 5.0" }
@@ -26,7 +14,7 @@ provider "aws" {
 
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["099720109477"]
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
@@ -81,7 +69,6 @@ resource "aws_iam_instance_profile" "ssm_profile" {
   role = aws_iam_role.ssm_role.name
 }
 
-# --- Flat-VM tier: 2x c6i.xlarge (on-demand) ---
 resource "aws_instance" "flat_vm" {
   count                       = 2
   ami                         = data.aws_ami.ubuntu.id
@@ -92,7 +79,6 @@ resource "aws_instance" "flat_vm" {
   tags = { Name = "hpnts-flat-vm-${count.index}", Tier = "flat" }
 }
 
-# --- Nested tier: 1x t3.large host, 8 Docker containers created via user_data ---
 resource "aws_instance" "nested_host" {
   instance_type          = "t3.large"
   ami                     = data.aws_ami.ubuntu.id
@@ -112,7 +98,6 @@ resource "aws_instance" "nested_host" {
   EOF
 }
 
-# --- Classifier service host ---
 resource "aws_instance" "classifier_service" {
   instance_type          = "t3.micro"
   ami                     = data.aws_ami.ubuntu.id

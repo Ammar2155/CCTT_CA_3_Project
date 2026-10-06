@@ -1,20 +1,4 @@
-"""
-TANS Agent: Residual-CNN + Actor-Critic scheduler for HPNTS-DRL.
 
-Runs as a local server. CloudSim (Java) connects over a TCP socket, sends the
-current system state once per scheduling decision as a JSON line, and receives
-back the chosen resource index. Training happens asynchronously from replayed
-(state, action, reward, next_state) tuples that CloudSim also reports.
-
-This is a SKELETON: state/action shapes match the HPNTS_Comparative_Project.java
-setup (2 flat VMs + 8 nested containers = 10 resources). Tune reward shaping,
-network depth, and hyperparameters against your own experiments before trusting
-any numbers for the paper.
-
-Usage:
-    python tans_agent.py --port 8765 --train    # training mode, saves checkpoints
-    python tans_agent.py --port 8765 --eval ckpt.pt   # frozen policy for comparison runs
-"""
 import argparse
 import json
 import socket
@@ -33,9 +17,9 @@ try:
 except Exception:
     pass
 
-N_RESOURCES = 10          # 2 flat VMs + 8 nested containers, matches the .java files
-WINDOW = 8                 # rolling ticks of history per resource
-N_CHANNELS = 3             # [utilization, queue_length, omega_virtual] per (resource, tick)
+N_RESOURCES = 10          
+WINDOW = 8                 
+N_CHANNELS = 3             
 GAMMA = 0.98
 LR = 1e-4
 REPLAY_CAPACITY = 50_000
@@ -44,13 +28,11 @@ ENTROPY_BONUS = 0.02
 
 
 class ResidualBlock(nn.Module):
-    """Residual block with (1x3) kernels: convolves along TIME for each resource
-    independently, so weights are shared across resources."""
     def __init__(self, channels):
         super().__init__()
         self.conv1 = nn.Conv2d(channels, channels, (1, 3), padding=(0, 1))
         self.conv2 = nn.Conv2d(channels, channels, (1, 3), padding=(0, 1))
-        self.bn1 = nn.GroupNorm(8, channels)  # GroupNorm: identical in train/eval, fine at batch size 1
+        self.bn1 = nn.GroupNorm(8, channels)  
         self.bn2 = nn.GroupNorm(8, channels)
 
     def forward(self, x):
@@ -61,28 +43,23 @@ class ResidualBlock(nn.Module):
 
 
 class TANSActorCritic(nn.Module):
-    """Fully-convolutional residual CNN over the [C, N_RESOURCES, WINDOW] state grid.
-    Task features are broadcast as extra input channels and a resource-coordinate
-    channel is added. Every resource is scored by the SAME weights (permutation-
-    friendly inductive bias), then global context (mean over resources) is mixed in
-    before the per-resource policy logit (actor) and a pooled value estimate (critic)."""
+
 
     def __init__(self, n_resources=N_RESOURCES, n_channels=N_CHANNELS, window=WINDOW,
                  hidden=64, n_res_blocks=3, extra_features=4):
         super().__init__()
         self.n_resources = n_resources
-        in_ch = n_channels + extra_features + 1          # grid + task features + coordinate
+        in_ch = n_channels + extra_features + 1          
         self.stem = nn.Conv2d(in_ch, hidden, (1, 3), padding=(0, 1))
         self.res_blocks = nn.Sequential(*[ResidualBlock(hidden) for _ in range(n_res_blocks)])
-        self.mix = nn.Conv1d(hidden * 2, hidden, 1)      # per-resource feature + global context
+        self.mix = nn.Conv1d(hidden * 2, hidden, 1)     
         self.actor_head = nn.Conv1d(hidden, 1, 1)
         self.critic_head = nn.Sequential(nn.Linear(hidden, 64), nn.ReLU(), nn.Linear(64, 1))
 
-        # Register coordinate buffer [1, 1, N, W] to avoid recreating on every step
+        
         coord = torch.linspace(0, 1, n_resources).view(1, 1, n_resources, 1).expand(1, 1, n_resources, window).clone().contiguous()
         self.register_buffer("coord_base", coord, persistent=False)
 
-        # Initialize actor head weights small so initial logits are near 0 and entropy is high (~2.3)
         nn.init.normal_(self.actor_head.weight, std=0.01)
         nn.init.constant_(self.actor_head.bias, 0.0)
 
@@ -92,13 +69,13 @@ class TANSActorCritic(nn.Module):
         coord = self.coord_base.expand(B, -1, -1, -1)
         x = torch.cat([grid, ex, coord], dim=1)
         x = F.relu(self.stem(x))
-        x = self.res_blocks(x)                            # [B, H, N, W]
-        x = x[:, :, :, -1]                                # latest step (receptive field covers the window)
-        g = x.mean(dim=2, keepdim=True).expand_as(x)      # global context across resources
-        h = F.relu(self.mix(torch.cat([x, g], dim=1)))    # [B, H, N]
-        logits = self.actor_head(h).squeeze(1)            # [B, N]
-        logits = torch.clamp(logits, min=-5.0, max=5.0)   # prevent logit explosion and entropy collapse
-        value = self.critic_head(h.mean(dim=2))           # [B, 1]
+        x = self.res_blocks(x)                            
+        x = x[:, :, :, -1]                                
+        g = x.mean(dim=2, keepdim=True).expand_as(x)      
+        h = F.relu(self.mix(torch.cat([x, g], dim=1)))    
+        logits = self.actor_head(h).squeeze(1)            
+        logits = torch.clamp(logits, min=-5.0, max=5.0)   
+        value = self.critic_head(h.mean(dim=2))           
         return logits, value
 
 
@@ -127,8 +104,6 @@ class TANSTrainer:
         self.replay = ReplayBuffer()
 
     def act(self, grid, extra, greedy=False):
-        """grid: [N_CHANNELS, N_RESOURCES, WINDOW] float tensor (unbatched)
-           extra: [extra_features] float tensor (unbatched)"""
         with torch.no_grad():
             logits, value = self.net(grid.unsqueeze(0), extra.unsqueeze(0))
             probs = F.softmax(logits, dim=-1).squeeze(0)
@@ -194,7 +169,7 @@ class TCPHandler(socketserver.StreamRequestHandler):
         trainer: TANSTrainer = self.server.trainer
         train_mode: bool = self.server.train_mode
         action_history = collections.Counter()
-        prev = {}  # per-connection last (grid, extra, action) for reward bookkeeping
+        prev = {}  
         print(f"[eval-check] Handler started connection | train_mode={train_mode} | greedy={not train_mode}", flush=True)
 
         step_count = 0

@@ -148,13 +148,10 @@ python tans_agent.py --port 8765 --eval tans_checkpoint_standalone.pt
 Compile and run the CloudSim comparative evaluation:
 
 ```bash
-# Compile Java source files
 javac -cp ".:lib/*" src/main/java/org/cloudbus/cloudsim/examples/*.java
 
-# Run main comparative simulation suite
 java -cp ".:lib/*:src/main/java" org.cloudbus/cloudsim.examples.HPNTS_Comparative_Project
 
-# Run statistical t-test validation
 java -cp ".:lib/*:src/main/java" org.cloudbus.cloudsim.examples.T_Test_Validation
 ```
 
@@ -173,13 +170,10 @@ java -cp ".:lib/*:src/main/java" org.cloudbus.cloudsim.examples.T_Test_Validatio
    Execute benchmark workloads across provisioned EC2 instances:
 
    ```bash
-   # FCFS Baseline
    python orchestrate.py --terraform-outputs outputs.json --classifier-url http://<CLASSIFIER_IP>:5000/classify --n-jobs 50 --mode fcfs
 
-   # Deterministic HPNTS
    python orchestrate.py --terraform-outputs outputs.json --classifier-url http://<CLASSIFIER_IP>:5000/classify --n-jobs 50 --mode hpnts
 
-   # DRL-TANS Adaptive Scheduling
    python orchestrate.py --terraform-outputs outputs.json --classifier-url http://<CLASSIFIER_IP>:5000/classify --n-jobs 50 --mode drl_tans
    ```
 

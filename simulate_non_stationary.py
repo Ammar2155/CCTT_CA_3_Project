@@ -4,8 +4,6 @@ import numpy as np
 def run_simulation_scenario(mode="hpnts", scenario="stationary", seed=42):
     rng = random.Random(seed)
     n_tasks = 200
-    
-    # Resources: 2 Flat VMs (capacities 1.0, 1.0), 8 Nested Containers (capacities 0.25, omega=0.10)
     flat_res = [0, 1]
     nested_res = list(range(2, 10))
     
@@ -20,10 +18,7 @@ def run_simulation_scenario(mode="hpnts", scenario="stationary", seed=42):
     
     hpc_flat_idx = 0
     htc_nested_idx = 0
-    
-    # Policy entropy / state tracking
     for t in range(n_tasks):
-        # Scenario parameters
         frac = t / n_tasks
         
         if scenario == "stationary":
@@ -51,14 +46,12 @@ def run_simulation_scenario(mode="hpnts", scenario="stationary", seed=42):
         is_hpc = rng.random() < hpc_ratio
         base_length = rng.uniform(12.0, 18.0) if is_hpc else rng.uniform(3.0, 8.0)
         
-        # Oracle placement: pick resource with minimum ready time + exec time
         oracle_exec = [base_length / 1.0 for _ in flat_res] + [base_length / 0.25 * (1 + omega) for _ in nested_res]
         oracle_ready = [max(arrival_time, flat_busy_until[r]) + oracle_exec[r] for r in range(2)] + \
                        [max(arrival_time, nested_busy_until[r-2]) + oracle_exec[r] for r in range(2, 10)]
         best_r = np.argmin(oracle_ready)
         
         if mode == "deterministic_hpnts":
-            # Deterministic HPNTS: HPC -> flat VM round-robin, HTC -> nested container round-robin
             if is_hpc:
                 chosen_r = flat_res[hpc_flat_idx % len(flat_res)]
                 hpc_flat_idx += 1
@@ -66,19 +59,16 @@ def run_simulation_scenario(mode="hpnts", scenario="stationary", seed=42):
                 chosen_r = nested_res[htc_nested_idx % len(nested_res)]
                 htc_nested_idx += 1
         elif mode == "drl_tans":
-            # DRL-TANS: Adaptive selection considering current queue state & omega drift
             if is_hpc:
-                # If flat VMs are backed up due to high HPC ratio, offload overflow to least busy container
                 earliest_flat = min(flat_busy_until)
                 if earliest_flat - arrival_time > 15.0 and scenario in ["hpc_drift", "combined_drift"]:
                     chosen_r = 2 + np.argmin(nested_busy_until)
-                    adaptation_delays.append(1) # adapted mid-drift
+                    adaptation_delays.append(1)
                 else:
                     chosen_r = flat_res[np.argmin(flat_busy_until)]
             else:
                 chosen_r = 2 + np.argmin(nested_busy_until)
                 
-        # Calculate execution
         if chosen_r in flat_res:
             exec_t = base_length / 1.0
             start_t = max(arrival_time, flat_busy_until[chosen_r])

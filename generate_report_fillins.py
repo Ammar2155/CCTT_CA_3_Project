@@ -2,7 +2,6 @@ import sys
 import json
 import numpy as np
 
-# Load classifier details
 with open("hpc_classifier.json", "r") as f:
     classifier_data = json.load(f)
 

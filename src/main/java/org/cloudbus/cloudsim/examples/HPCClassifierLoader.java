@@ -5,21 +5,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
 
-/**
- * HPCClassifierLoader
- *
- * Loads the JSON coefficients exported by classifier/train_classifier.py and
- * applies logistic-regression inference to classify a Cloudlet as HPC (1) or
- * HTC (0). Drop-in replacement for:
- *
- *     if (id % 5 == 0) { ... HPC ... } else { ... HTC ... }
- *
- * in both T_Test_Validation.java and HPNTS_Comparative_Project.java.
- *
- * No external JSON library dependency — the exported file is small and fixed
- * shape, so a minimal regex-based parse is enough. Swap for org.json/Jackson
- * if either is already on your classpath.
- */
 public class HPCClassifierLoader {
 
     private final double[] weights;
@@ -49,8 +34,8 @@ public class HPCClassifierLoader {
         }
 
         if (!Files.exists(p)) {
-            throw new FileNotFoundException("Could not locate classifier JSON file at '" + path + 
-                "' or relative to working directory '" + System.getProperty("user.dir") + "'");
+            throw new FileNotFoundException("Could not locate classifier JSON file at '" + path +
+                    "' or relative to working directory '" + System.getProperty("user.dir") + "'");
         }
 
         String content = new String(Files.readAllBytes(p));
@@ -68,7 +53,8 @@ public class HPCClassifierLoader {
         if (wm.find()) {
             String[] parts = wm.group(1).split(",");
             weights = new double[parts.length];
-            for (int i = 0; i < parts.length; i++) weights[i] = Double.parseDouble(parts[i].trim());
+            for (int i = 0; i < parts.length; i++)
+                weights[i] = Double.parseDouble(parts[i].trim());
         }
 
         Matcher bm = Pattern.compile("\"bias\":\\s*([-0-9.eE]+)").matcher(content);
@@ -80,10 +66,10 @@ public class HPCClassifierLoader {
         return new HPCClassifierLoader(weights, bias, threshold, featureOrder);
     }
 
-    /** features must be supplied in the SAME order as featureOrder (see getFeatureOrder()). */
     public boolean isHPC(double[] features) {
         double z = bias;
-        for (int i = 0; i < weights.length; i++) z += weights[i] * features[i];
+        for (int i = 0; i < weights.length; i++)
+            z += weights[i] * features[i];
         double p = 1.0 / (1.0 + Math.exp(-z));
         return p >= threshold;
     }
@@ -92,18 +78,10 @@ public class HPCClassifierLoader {
         return featureOrder;
     }
 
-    /**
-     * Example integration inside runSimulation(), replacing:
-     *     if (id % 5 == 0) { task.setClassType(1); } else { task.setClassType(0); }
-     *
-     * You'll need real per-task cpu_request / mem_request / duration_norm /
-     * io_intensity values here -- derive them from your Cloudlet generation
-     * parameters (or from replayed trace rows) rather than placeholders.
-     */
     public static void exampleUsage() throws IOException {
         HPCClassifierLoader classifier = HPCClassifierLoader.fromJsonFile("hpc_classifier.json");
         double cpuRequest = 0.62, memRequest = 0.41, durationNorm = 0.30, ioIntensity = 0.15;
-        double[] features = {cpuRequest, memRequest, durationNorm, ioIntensity}; // must match feature_order
+        double[] features = { cpuRequest, memRequest, durationNorm, ioIntensity };
         boolean isHPC = classifier.isHPC(features);
         System.out.println("Classified as: " + (isHPC ? "HPC" : "HTC"));
     }

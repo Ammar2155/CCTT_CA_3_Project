@@ -1,21 +1,4 @@
-"""
-train_standalone.py
 
-Trains TANSActorCritic against a lightweight SYNTHETIC scheduling environment
-that mimics the CloudSim state/action/reward contract, but runs entirely in
-Python with no socket, no JVM, no CloudSim -- so you can verify the RL
-algorithm itself actually learns before spending time debugging the Java
-bridge. If this script converges cleanly but your CloudSim-driven training
-doesn't, the bug is in the Java-side wiring (seeding, reward computation,
-or state feeding), not the network or training loop.
-
-Also exposes per-episode POLICY ENTROPY -- the thing that would have caught
-the "-38.93 repeated 16 times" result immediately (entropy near 0 = mode
-collapse, not convergence).
-
-Usage:
-    python3 train_standalone.py --episodes 800
-"""
 import argparse
 import time
 import random
@@ -27,8 +10,8 @@ import torch.nn.functional as F
 from tans_agent import TANSTrainer, N_RESOURCES, WINDOW, N_CHANNELS, BATCH_SIZE
 
 TASKS_PER_EPISODE = 50
-FLAT_RESOURCES = [0, 1]                 # matches your 2 flat VMs
-NESTED_RESOURCES = list(range(2, 10))   # matches your 8 nested containers
+FLAT_RESOURCES = [0, 1]
+NESTED_RESOURCES = list(range(2, 10))
 OMEGA_VIRTUAL = {r: 0.0 for r in FLAT_RESOURCES}
 OMEGA_VIRTUAL.update({r: 0.10 for r in NESTED_RESOURCES})
 CAPACITY = {r: 1.0 for r in FLAT_RESOURCES}
@@ -36,8 +19,6 @@ CAPACITY.update({r: 0.25 for r in NESTED_RESOURCES})
 
 
 def hpc_ratio_for_phase(task_idx, n_tasks):
-    """Matches the 3-phase drift curriculum from your screenshots:
-    Phase 1 (0-33%): 20% HPC, Phase 2 (33-66%): 60% HPC (burst), Phase 3 (66-100%): 30% HPC."""
     frac = task_idx / n_tasks
     if frac < 0.33:
         return 0.20
@@ -48,8 +29,6 @@ def hpc_ratio_for_phase(task_idx, n_tasks):
 
 
 class SyntheticEpisode:
-    """One episode = TASKS_PER_EPISODE tasks arriving under the drift curriculum.
-    Re-seeded per episode (this is the fix for the memorized-episode bug)."""
 
     def __init__(self, episode_seed):
         self.rng = random.Random(episode_seed)
@@ -74,7 +53,6 @@ class SyntheticEpisode:
         return torch.tensor(grid), torch.tensor(extra)
 
     def step(self, action, task_is_hpc, mi_norm):
-        """Returns reward for placing this task on `action`."""
         exec_time = mi_norm / CAPACITY[action] * (1 + OMEGA_VIRTUAL[action])
         queue_penalty = self.queue_depth[action] * 0.05
         mismatch_penalty = 0.5 if (task_is_hpc and action not in FLAT_RESOURCES) or \
@@ -82,7 +60,7 @@ class SyntheticEpisode:
         reward = -(exec_time + queue_penalty + mismatch_penalty)
 
         self.queue_depth[action] += 1
-        if self.rng.random() < 0.4:  # some tasks "complete" and free up the queue
+        if self.rng.random() < 0.4:  
             self.queue_depth[action] = max(0, self.queue_depth[action] - 1)
 
         for r in range(N_RESOURCES):
@@ -125,7 +103,7 @@ def run_episode(trainer, episode_seed, train=True):
         total_reward += reward
 
         if done:
-            next_grid, next_extra = grid, extra  # terminal: reuse last state, done=True masks bootstrap
+            next_grid, next_extra = grid, extra
         else:
             is_hpc, mi_norm = env.next_task()
             next_grid, next_extra = env.current_state(is_hpc, mi_norm)
@@ -147,7 +125,6 @@ def run_episode(trainer, episode_seed, train=True):
 
 
 def random_policy_baseline(n_episodes=50):
-    """Sanity floor: mean reward of a uniformly random policy."""
     rewards = []
     for ep in range(n_episodes):
         env = SyntheticEpisode(episode_seed=99000 + ep)
@@ -165,8 +142,6 @@ def random_policy_baseline(n_episodes=50):
 
 
 def heuristic_policy_baseline(n_episodes=50):
-    """Sanity ceiling-ish: the deterministic 'HPC->flat, HTC->nested round robin' rule,
-    i.e. what your existing HPNTS deterministic scheduler effectively does."""
     rewards = []
     for ep in range(n_episodes):
         env = SyntheticEpisode(episode_seed=98000 + ep)
@@ -207,7 +182,7 @@ def main():
 
     reward_history = []
     for ep in range(args.episodes):
-        episode_seed = 1000 + ep  # DIFFERENT seed every episode -- this is the fix
+        episode_seed = 1000 + ep
         total_reward, avg_loss, avg_entropy = run_episode(trainer, episode_seed, train=True)
         reward_history.append(total_reward)
 
@@ -224,8 +199,6 @@ def main():
     total_time = time.time() - start
     print(f"\nDone. {args.episodes} episodes in {total_time:.1f}s "
           f"({total_time/args.episodes*1000:.1f}ms/episode). Saved {args.checkpoint}")
-
-    # Frozen-policy eval against both baselines
     print("\nEvaluating frozen (greedy) policy vs baselines (50 eval episodes each)...")
     eval_rewards = []
     for ep in range(50):

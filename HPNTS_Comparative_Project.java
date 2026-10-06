@@ -8,13 +8,10 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import java.text.DecimalFormat;
 import java.util.*;
 
-/**
- * HPNTS Comparative Simulation for CloudSim 7.0.1 with DRL-TANS Engine Integration
- */
 public class HPNTS_Comparative_Project {
 
     private static final int TASKS = 50;
-    private static final double OMEGA_VIRTUAL = 0.10; 
+    private static final double OMEGA_VIRTUAL = 0.10;
 
     public static final int MODE_DETERMINISTIC_HPNTS = 0;
     public static final int MODE_DRL_TANS = 1;
@@ -46,7 +43,7 @@ public class HPNTS_Comparative_Project {
                     System.out.println("[Java Bridge] Connected to TANS server on localhost:8765");
                     int trainEpisodes = 900;
                     for (int ep = 0; ep < trainEpisodes; ep++) {
-                        int episodeSeed = 1000 + ep; // DIFFERENT seed per episode for training
+                        int episodeSeed = 1000 + ep;
                         double totalEpReward = runEpisode(MODE_DRL_TANS, true, bridge, episodeSeed, ep == 0);
                         if ((ep + 1) % 50 == 0 || ep == 0) {
                             System.out.printf("[Java Train] Ep %3d/%d finished | Seed=%d | Ep Total Step Reward=%.4f\n",
@@ -82,7 +79,6 @@ public class HPNTS_Comparative_Project {
                     System.out.println("  Phase 3 (Tasks 34-49): HPC Ratio = 30%, Arrival Interval = 1.0s, Omega_Virtual = 0.10");
                     System.out.println("-----------------------------------------------------------------------------------------");
 
-                    // 1. Stationary Condition (seeds 5000..5009)
                     double runningCumRegretStat = 0.0;
                     for (int ep = 0; ep < evalEpisodes; ep++) {
                         int seed = 5000 + ep;
@@ -95,7 +91,6 @@ public class HPNTS_Comparative_Project {
                         cumRegretStat[ep] = runningCumRegretStat;
                     }
 
-                    // 2. Drifting Condition (seeds 6000..6009)
                     double runningCumRegretDrift = 0.0;
                     for (int ep = 0; ep < evalEpisodes; ep++) {
                         int seed = 6000 + ep;
@@ -110,16 +105,13 @@ public class HPNTS_Comparative_Project {
                         cumRegretDrift[ep] = runningCumRegretDrift;
                     }
 
-                    // Print Extended Per-Episode Raw Output Table
                     printExtendedRawTable(evalEpisodes, hpntsStationary, drlStationary, perEpisodeRegretStat, cumRegretStat,
                                           hpntsDrifting, drlDrifting, drlAdaptationLagDecisions, drlAdaptationLagSeconds,
                                           perEpisodeRegretDrift, cumRegretDrift);
 
-                    // Print Summary Table
                     printEvaluationTableDetailed(hpntsStationary, drlStationary, hpntsDrifting, drlDrifting,
                                                  drlAdaptationLagDecisions, drlAdaptationLagSeconds, perEpisodeRegretDrift);
 
-                    // Print Regret Plot
                     printRegretPlot(evalEpisodes, cumRegretDrift);
                 }
             }
@@ -303,21 +295,20 @@ public class HPNTS_Comparative_Project {
         res.makespan = makespan;
         res.chosenActions = chosenActions;
 
-        // Compute Adaptation Lag (decisions & seconds) after Drift Event at Task 17 (Phase 2 onset)
         if (isDrifting && mode == MODE_DRL_TANS) {
-            int driftOnsetTaskIdx = 17; // Phase 2 starts at task 17
-            int lagDecisions = cloudletList.size() - driftOnsetTaskIdx; // Default max lag
+            int driftOnsetTaskIdx = 17;
+            int lagDecisions = cloudletList.size() - driftOnsetTaskIdx;
             for (int i = driftOnsetTaskIdx; i < cloudletList.size(); i++) {
                 Cloudlet task = cloudletList.get(i);
                 int act = chosenActions[i];
-                // Check if DRL-TANS correctly schedules an HPC task to a Flat VM (0 or 1)
+
                 if (task.getClassType() == 1 && (act == 0 || act == 1)) {
                     lagDecisions = i - driftOnsetTaskIdx;
                     break;
                 }
             }
             res.adaptationLagDecisions = lagDecisions;
-            res.adaptationLagSeconds = lagDecisions * 0.5; // Phase 2 arrival interval is 0.5s
+            res.adaptationLagSeconds = lagDecisions * 0.5;
         } else {
             res.adaptationLagDecisions = 0;
             res.adaptationLagSeconds = 0.0;
@@ -351,13 +342,13 @@ public class HPNTS_Comparative_Project {
 
             if (isDrifting) {
                 double hpcProb;
-                if (id < 17) { // Phase 1: 0-33%
+                if (id < 17) {
                     hpcProb = 0.20;
                     currentOmegaVirtual = 0.10;
-                } else if (id < 34) { // Phase 2: 33-66% (DRIFT EVENT: HPC Surge + Overhead Drift)
+                } else if (id < 34) {
                     hpcProb = 0.70;
                     currentOmegaVirtual = 0.25;
-                } else { // Phase 3: 66-100%
+                } else {
                     hpcProb = 0.30;
                     currentOmegaVirtual = 0.10;
                 }

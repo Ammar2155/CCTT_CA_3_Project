@@ -9,7 +9,6 @@ import seaborn as sns
 
 from tans_agent import TANSActorCritic, N_RESOURCES, WINDOW, N_CHANNELS
 
-# Set random seeds for reproducible evaluation
 np.random.seed(42)
 torch.manual_seed(42)
 random.seed(42)
@@ -51,7 +50,6 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
     regret_history = []
     adaptation_lags = []
     
-    # Store workload trace
     workload = []
     for t in range(n_tasks):
         frac = t / n_tasks
@@ -87,7 +85,6 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
             "t": t, "arrival": arrival_time, "is_hpc": is_hpc, "blen": base_length, "omega": omega_val, "frac": frac
         })
 
-    # Execute simulation for specified policy mode
     for task in workload:
         t = task["t"]
         arr = task["arrival"]
@@ -96,7 +93,6 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
         om = task["omega"]
         mi_norm = blen / 18.0
         
-        # Oracle earliest completion resource
         candidate_finish = []
         for r in range(N_RESOURCES):
             busy = flat_busy[r] if r in FLAT_RESOURCES else nested_busy[r - 2]
@@ -119,7 +115,6 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
         elif mode == "oracle":
             chosen_r = oracle_r
         elif mode == "drl_tans":
-            # State grid representation
             grid = np.zeros((N_CHANNELS, N_RESOURCES, WINDOW), dtype=np.float32)
             for r in range(N_RESOURCES):
                 grid[0, r, :] = util_hist[r]
@@ -138,9 +133,6 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
                 logits, _ = model(g_tensor, e_tensor)
                 nn_r = int(torch.argmax(logits, dim=1).item())
             
-            # DRL adaptive routing policy with queue backpressure awareness:
-            # Under severe Flat VM queue buildup during HPC ratio spikes/rate bursts,
-            # DRL dynamically offloads overflow HPC tasks to least-busy container or optimal flat VM
             flat_backlog = max(0.0, min(flat_busy) - arr)
             nested_backlog = max(0.0, min(nested_busy) - arr)
             
@@ -150,13 +142,11 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
                 else:
                     chosen_r = FLAT_RESOURCES[np.argmin(flat_busy)]
             else:
-                # If container interference omega is severe (>0.25), offload HTC task to available Flat VM
                 if om > 0.25 and flat_backlog < 3.0:
                     chosen_r = FLAT_RESOURCES[np.argmin(flat_busy)]
                 else:
                     chosen_r = NESTED_RESOURCES[np.argmin(nested_busy)]
 
-        # Execution time computation
         if chosen_r in FLAT_RESOURCES:
             exec_dur = blen / 1.0
             start_t = max(arr, flat_busy[chosen_r])
@@ -172,8 +162,7 @@ def simulate_scenario(scenario_name, mode="drl_tans", n_tasks=250, seed=42):
         current_time = max(current_time, fin_t)
         finish_times.append(fin_t)
         latencies.append(fin_t - arr)
-        
-        # State history update
+
         for r in range(N_RESOURCES):
             busy_t = flat_busy[r] if r in FLAT_RESOURCES else nested_busy[r - 2]
             util_hist[r] = util_hist[r][1:] + [min(1.0, max(0.0, busy_t - arr) / 20.0)]
@@ -196,7 +185,7 @@ for sc in scenarios:
             "finish_times": fins
         }
 
-# Compute Cumulative Regret vs Oracle
+
 for sc in scenarios:
     oracle_lats = np.array(results[sc]["oracle"]["latencies"])
     for mode in ["fcfs", "deterministic_hpnts", "drl_tans", "oracle"]:
@@ -204,13 +193,12 @@ for sc in scenarios:
         regret = np.cumsum(np.maximum(0.0, mode_lats - oracle_lats))
         results[sc][mode]["regret"] = regret.tolist()
 
-# Compute Adaptation Lag (tasks to recover to within 15% of oracle latency after shift at t=83)
 def calculate_lag(mode_latencies, oracle_latencies, shift_idx=83, window=10):
     diffs = np.array(mode_latencies[shift_idx:]) - np.array(oracle_latencies[shift_idx:])
     for i in range(len(diffs) - window):
         if np.mean(diffs[i:i+window]) < 2.5:
             return i + 1
-    return 45  # baseline max lag
+    return 45  
 
 print("="*95)
 print(f"{'Scenario':<18} | {'FCFS (s)':<12} | {'Det. HPNTS (s)':<15} | {'DRL-TANS (s)':<14} | {'Oracle (s)':<12} | {'DRL vs Det. (%)':<15}")
@@ -250,11 +238,9 @@ for sc in scenarios:
         "fcfs_regret": round(results[sc]["fcfs"]["regret"][-1], 1)
     })
 
-# Save JSON fill-in data
 with open("drl_vs_hpnts_results.json", "w") as f:
     json.dump({"summary_table": table_data, "adaptation_lags": lag_data}, f, indent=2)
 
-# --- GENERATE PUBLICATION-GRADE GRAPH ---
 plt.style.use("seaborn-v0_8-whitegrid" if "seaborn-v0_8-whitegrid" in plt.style.available else "default")
 fig, axes = plt.subplots(2, 2, figsize=(13, 9.5), dpi=300)
 
@@ -265,7 +251,6 @@ colors = {
     "Oracle": "#3498db"
 }
 
-# Subplot A: Cumulative Regret over Task Sequence (Combined Non-Stationary Drift)
 sc_target = "combined_drift"
 tasks_x = np.arange(1, 251)
 ax_a = axes[0, 0]
@@ -285,7 +270,6 @@ ax_a.set_ylabel("Cumulative Regret (seconds)", fontsize=10)
 ax_a.legend(loc="upper left", frameon=True, facecolor="white", edgecolor="none")
 ax_a.grid(True, linestyle=":", alpha=0.6)
 
-# Subplot B: Rolling Mean Task Latency & Recovery Profile
 ax_b = axes[0, 1]
 def smooth_series(y, box_pts=10):
     box = np.ones(box_pts)/box_pts
@@ -313,7 +297,6 @@ ax_b.set_ylabel("Rolling Mean Task Latency (seconds)", fontsize=10)
 ax_b.legend(loc="upper right", frameon=True, facecolor="white", edgecolor="none")
 ax_b.grid(True, linestyle=":", alpha=0.6)
 
-# Subplot C: Total Makespan Across All 5 Non-Stationary Scenarios
 ax_c = axes[1, 0]
 x_indices = np.arange(len(scenarios))
 w_bar = 0.20
@@ -330,7 +313,6 @@ ax_c.bar(x_indices - 0.5*w_bar, m_hpnts, w_bar, label="Deterministic HPNTS", col
 ax_c.bar(x_indices + 0.5*w_bar, m_drl, w_bar, label="DRL-TANS (Ours)", color=colors["DRL-TANS"], alpha=0.95)
 ax_c.bar(x_indices + 1.5*w_bar, m_oracle, w_bar, label="Oracle", color=colors["Oracle"], alpha=0.85)
 
-# Annotate percentage improvements on DRL-TANS bars
 for i in range(len(scenarios)):
     pct = table_data[i]["improvement_pct"]
     ax_c.text(x_indices[i] + 0.5*w_bar, m_drl[i] + 12, f"+{pct:.1f}%", ha="center", fontsize=8, fontweight="bold", color="#1e8449")
@@ -342,7 +324,6 @@ ax_c.set_ylabel("Total Makespan (seconds)", fontsize=10)
 ax_c.legend(loc="upper left", frameon=True, facecolor="white", edgecolor="none")
 ax_c.grid(True, linestyle=":", alpha=0.5, axis="y")
 
-# Subplot D: Adaptation Lag (Task Steps to Recover Post-Shift)
 ax_d = axes[1, 1]
 lags_hpnts = [row["hpnts_lag"] for row in lag_data]
 lags_drl = [row["drl_lag"] for row in lag_data]

@@ -8,13 +8,10 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import java.text.DecimalFormat;
 import java.util.*;
 
-/**
- * HPNTS Comparative Simulation for CloudSim 7.0.1 with DRL-TANS Engine Integration
- */
 public class HPNTS_Comparative_Project {
 
     private static final int TASKS = 50;
-    private static final double OMEGA_VIRTUAL = 0.10; 
+    private static final double OMEGA_VIRTUAL = 0.10;
 
     public static final int MODE_DETERMINISTIC_HPNTS = 0;
     public static final int MODE_DRL_TANS = 1;
@@ -27,8 +24,10 @@ public class HPNTS_Comparative_Project {
         boolean isTrain = false;
         boolean isEval = false;
         for (String arg : args) {
-            if (arg.equals("--train")) isTrain = true;
-            if (arg.equals("--eval")) isEval = true;
+            if (arg.equals("--train"))
+                isTrain = true;
+            if (arg.equals("--eval"))
+                isEval = true;
         }
 
         if (!isTrain && !isEval) {
@@ -38,7 +37,7 @@ public class HPNTS_Comparative_Project {
         try {
             classifier = HPCClassifierLoader.fromJsonFile("hpc_classifier.json");
 
-            double[] omegaVirtualArray = new double[]{0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10};
+            double[] omegaVirtualArray = new double[] { 0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10 };
 
             if (isTrain) {
                 System.out.println("Starting HPNTS CloudSim Training Bridge (300 Episodes)...");
@@ -46,11 +45,11 @@ public class HPNTS_Comparative_Project {
                     System.out.println("[Java Bridge] Connected to TANS server on localhost:8765");
                     int trainEpisodes = 300;
                     for (int ep = 0; ep < trainEpisodes; ep++) {
-                        int episodeSeed = 1000 + ep; // DIFFERENT seed per episode for training
+                        int episodeSeed = 1000 + ep;
                         double totalEpReward = runEpisode(MODE_DRL_TANS, true, bridge, episodeSeed, ep == 0);
                         if ((ep + 1) % 50 == 0 || ep == 0) {
                             System.out.printf("[Java Train] Ep %3d/%d finished | Seed=%d | Ep Total Step Reward=%.4f\n",
-                                ep + 1, trainEpisodes, episodeSeed, totalEpReward);
+                                    ep + 1, trainEpisodes, episodeSeed, totalEpReward);
                         }
                     }
                 }
@@ -61,7 +60,6 @@ public class HPNTS_Comparative_Project {
 
                     int evalEpisodes = 10;
 
-                    // 1. Stationary Condition (seeds 5000..5009)
                     double[] hpntsStationary = new double[evalEpisodes];
                     double[] drlStationary = new double[evalEpisodes];
 
@@ -71,7 +69,6 @@ public class HPNTS_Comparative_Project {
                         drlStationary[ep] = runSimulationMakespan(MODE_DRL_TANS, false, bridge, seed);
                     }
 
-                    // 2. Drifting Condition (seeds 6000..6009)
                     double[] hpntsDrifting = new double[evalEpisodes];
                     double[] drlDrifting = new double[evalEpisodes];
 
@@ -89,7 +86,8 @@ public class HPNTS_Comparative_Project {
         }
     }
 
-    private static double runEpisode(int mode, boolean isDrifting, TANSBridgeClient bridge, int episodeSeed, boolean printFirst5Rewards) throws Exception {
+    private static double runEpisode(int mode, boolean isDrifting, TANSBridgeClient bridge, int episodeSeed,
+            boolean printFirst5Rewards) throws Exception {
         CloudSim.init(1, Calendar.getInstance(), false);
         Datacenter datacenter = createDatacenter("Datacenter_0");
         DatacenterBroker broker = createBroker();
@@ -98,7 +96,8 @@ public class HPNTS_Comparative_Project {
         List<Vm> vmlist = createVmList(brokerId);
         broker.submitGuestList(vmlist);
 
-        List<Cloudlet> cloudletList = generateCloudlets(brokerId, isDrifting, episodeSeed, mode != MODE_DETERMINISTIC_HPNTS);
+        List<Cloudlet> cloudletList = generateCloudlets(brokerId, isDrifting, episodeSeed,
+                mode != MODE_DETERMINISTIC_HPNTS);
 
         if (mode == MODE_DETERMINISTIC_HPNTS) {
             cloudletList.sort((c1, c2) -> Integer.compare(c2.getClassType(), c1.getClassType()));
@@ -140,13 +139,14 @@ public class HPNTS_Comparative_Project {
                 double miNorm = (double) task.getCloudletLength() / 30000.0;
                 double queueDepthNorm = (double) i / (double) TASKS;
                 double timeNorm = (double) i / (double) TASKS;
-                double[] extraFeatures = new double[]{priority, miNorm, queueDepthNorm, timeNorm};
+                double[] extraFeatures = new double[] { priority, miNorm, queueDepthNorm, timeNorm };
 
                 boolean done = (i == cloudletList.size() - 1);
 
                 if (printFirst5Rewards && i < 5) {
                     System.out.printf("  [Ep 1 Step %d Raw Reward] = %.4f (sign=%s, done=%b)\n",
-                        i + 1, lastReward, (lastReward <= 0 ? "NEGATIVE" : "POSITIVE"), (i > 0 && i - 1 == cloudletList.size() - 1));
+                            i + 1, lastReward, (lastReward <= 0 ? "NEGATIVE" : "POSITIVE"),
+                            (i > 0 && i - 1 == cloudletList.size() - 1));
                 }
 
                 int chosenResourceIdx = bridge.chooseResource(extraFeatures, lastReward, done);
@@ -156,9 +156,10 @@ public class HPNTS_Comparative_Project {
                 broker.bindCloudletToVm(task.getCloudletId(), chosenVm.getId());
 
                 double omega = (chosenResourceIdx >= 2) ? OMEGA_VIRTUAL : 0.0;
-                double execTimeEst = (double) task.getCloudletLength() * (1.0 + omega) / (chosenVm.getMips() * chosenVm.getNumberOfPes());
+                double execTimeEst = (double) task.getCloudletLength() * (1.0 + omega)
+                        / (chosenVm.getMips() * chosenVm.getNumberOfPes());
                 boolean isHpcMismatch = (task.getClassType() == 1 && chosenResourceIdx >= 2);
-                lastReward = - (execTimeEst / 10.0) - (isHpcMismatch ? 0.5 : 0.0) - 0.1 * queueLength[chosenResourceIdx];
+                lastReward = -(execTimeEst / 10.0) - (isHpcMismatch ? 0.5 : 0.0) - 0.1 * queueLength[chosenResourceIdx];
                 totalEpisodeReward += lastReward;
             }
         }
@@ -169,7 +170,8 @@ public class HPNTS_Comparative_Project {
         return totalEpisodeReward;
     }
 
-    private static double runSimulationMakespan(int mode, boolean isDrifting, TANSBridgeClient bridge, int episodeSeed) throws Exception {
+    private static double runSimulationMakespan(int mode, boolean isDrifting, TANSBridgeClient bridge, int episodeSeed)
+            throws Exception {
         CloudSim.init(1, Calendar.getInstance(), false);
         Datacenter datacenter = createDatacenter("Datacenter_0");
         DatacenterBroker broker = createBroker();
@@ -178,7 +180,8 @@ public class HPNTS_Comparative_Project {
         List<Vm> vmlist = createVmList(brokerId);
         broker.submitGuestList(vmlist);
 
-        List<Cloudlet> cloudletList = generateCloudlets(brokerId, isDrifting, episodeSeed, mode != MODE_DETERMINISTIC_HPNTS);
+        List<Cloudlet> cloudletList = generateCloudlets(brokerId, isDrifting, episodeSeed,
+                mode != MODE_DETERMINISTIC_HPNTS);
 
         if (mode == MODE_DETERMINISTIC_HPNTS) {
             cloudletList.sort((c1, c2) -> Integer.compare(c2.getClassType(), c1.getClassType()));
@@ -218,7 +221,7 @@ public class HPNTS_Comparative_Project {
                 double miNorm = (double) task.getCloudletLength() / 30000.0;
                 double queueDepthNorm = (double) i / (double) TASKS;
                 double timeNorm = (double) i / (double) TASKS;
-                double[] extraFeatures = new double[]{priority, miNorm, queueDepthNorm, timeNorm};
+                double[] extraFeatures = new double[] { priority, miNorm, queueDepthNorm, timeNorm };
 
                 boolean done = (i == cloudletList.size() - 1);
                 int chosenResourceIdx = bridge.chooseResource(extraFeatures, lastReward, done);
@@ -228,9 +231,10 @@ public class HPNTS_Comparative_Project {
                 broker.bindCloudletToVm(task.getCloudletId(), chosenVm.getId());
 
                 double omega = (chosenResourceIdx >= 2) ? OMEGA_VIRTUAL : 0.0;
-                double execTimeEst = (double) task.getCloudletLength() * (1.0 + omega) / (chosenVm.getMips() * chosenVm.getNumberOfPes());
+                double execTimeEst = (double) task.getCloudletLength() * (1.0 + omega)
+                        / (chosenVm.getMips() * chosenVm.getNumberOfPes());
                 boolean isHpcMismatch = (task.getClassType() == 1 && chosenResourceIdx >= 2);
-                lastReward = - (execTimeEst / 10.0) - (isHpcMismatch ? 0.5 : 0.0) - 0.1 * queueLength[chosenResourceIdx];
+                lastReward = -(execTimeEst / 10.0) - (isHpcMismatch ? 0.5 : 0.0) - 0.1 * queueLength[chosenResourceIdx];
             }
         }
 
@@ -283,7 +287,7 @@ public class HPNTS_Comparative_Project {
                 double memRequest = rng.nextDouble();
                 double durationNorm = rng.nextDouble();
                 double ioIntensity = rng.nextDouble();
-                double[] features = {cpuRequest, memRequest, durationNorm, ioIntensity};
+                double[] features = { cpuRequest, memRequest, durationNorm, ioIntensity };
                 isHPCTask = classifier.isHPC(features);
             }
 
@@ -293,7 +297,7 @@ public class HPNTS_Comparative_Project {
                 task.setUserId(brokerId);
                 task.setClassType(1);
             } else {
-                long length = (long)(baseLength * (1 + OMEGA_VIRTUAL));
+                long length = (long) (baseLength * (1 + OMEGA_VIRTUAL));
                 task = new Cloudlet(id, length, 1, 300, 300, utilizationModel, utilizationModel, utilizationModel);
                 task.setUserId(brokerId);
                 task.setClassType(0);
@@ -310,16 +314,20 @@ public class HPNTS_Comparative_Project {
             for (int p = 0; p < 8; p++) {
                 peList.add(new Pe(p, new PeProvisionerSimple(5000)));
             }
-            hostList.add(new Host(i, new RamProvisionerSimple(32000), new BwProvisionerSimple(1000000), 100000, peList, new VmSchedulerTimeShared(peList)));
+            hostList.add(new Host(i, new RamProvisionerSimple(32000), new BwProvisionerSimple(1000000), 100000, peList,
+                    new VmSchedulerTimeShared(peList)));
         }
-        return new Datacenter(name, new DatacenterCharacteristics("x86", "Linux", "Xen", hostList, 10.0, 3.0, 0.05, 0.001, 0.0), new VmAllocationPolicySimple(hostList), new LinkedList<>(), 0);
+        return new Datacenter(name,
+                new DatacenterCharacteristics("x86", "Linux", "Xen", hostList, 10.0, 3.0, 0.05, 0.001, 0.0),
+                new VmAllocationPolicySimple(hostList), new LinkedList<>(), 0);
     }
 
     private static DatacenterBroker createBroker() throws Exception {
         return new DatacenterBroker("Broker");
     }
 
-    private static void printEvaluationTable(double[] hpntsStat, double[] drlStat, double[] hpntsDrift, double[] drlDrift) {
+    private static void printEvaluationTable(double[] hpntsStat, double[] drlStat, double[] hpntsDrift,
+            double[] drlDrift) {
         double hpntsStatMean = mean(hpntsStat);
         double hpntsStatStd = std(hpntsStat);
         double drlStatMean = mean(drlStat);
@@ -334,28 +342,34 @@ public class HPNTS_Comparative_Project {
 
         DecimalFormat df = new DecimalFormat("0.00");
 
-        System.out.println("\n=========================================================================================");
+        System.out
+                .println("\n=========================================================================================");
         System.out.println("   FROZEN-POLICY EVALUATION RESULTS (10 EVAL EPISODES PER CONDITION)");
         System.out.println("=========================================================================================");
-        System.out.printf("%-20s | %-30s | %-30s | %-12s\n", "Workload Scenario", "Deterministic HPNTS (mean ± std)", "DRL-TANS (mean ± std)", "% Improvement");
+        System.out.printf("%-20s | %-30s | %-30s | %-12s\n", "Workload Scenario", "Deterministic HPNTS (mean ± std)",
+                "DRL-TANS (mean ± std)", "% Improvement");
         System.out.println("-----------------------------------------------------------------------------------------");
         System.out.printf("%-20s | %s ± %s                    | %s ± %s                    | %s%%\n",
-            "Stationary", df.format(hpntsStatMean), df.format(hpntsStatStd), df.format(drlStatMean), df.format(drlStatStd), df.format(statImprov));
+                "Stationary", df.format(hpntsStatMean), df.format(hpntsStatStd), df.format(drlStatMean),
+                df.format(drlStatStd), df.format(statImprov));
         System.out.printf("%-20s | %s ± %s                    | %s ± %s                    | %s%%\n",
-            "Drifting", df.format(hpntsDriftMean), df.format(hpntsDriftStd), df.format(drlDriftMean), df.format(drlDriftStd), df.format(driftImprov));
+                "Drifting", df.format(hpntsDriftMean), df.format(hpntsDriftStd), df.format(drlDriftMean),
+                df.format(drlDriftStd), df.format(driftImprov));
         System.out.println("=========================================================================================");
     }
 
     private static double mean(double[] arr) {
         double sum = 0;
-        for (double v : arr) sum += v;
+        for (double v : arr)
+            sum += v;
         return sum / arr.length;
     }
 
     private static double std(double[] arr) {
         double m = mean(arr);
         double sumSq = 0;
-        for (double v : arr) sumSq += Math.pow(v - m, 2);
+        for (double v : arr)
+            sumSq += Math.pow(v - m, 2);
         return Math.sqrt(sumSq / (arr.length - 1));
     }
 }

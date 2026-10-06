@@ -1,13 +1,3 @@
-"""
-classifier_service.py
-
-Tiny Flask wrapper around the exported logistic-regression classifier
-(hpc_classifier.json from classifier/train_classifier.py), deployed on the
-`classifier_service` EC2 instance. The orchestration harness calls this once
-per job before routing it to the flat or nested tier.
-
-Run: python3 classifier_service.py --model hpc_classifier.json --port 5000
-"""
 import argparse
 import json
 import math

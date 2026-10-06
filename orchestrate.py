@@ -1,21 +1,4 @@
-"""
-orchestrate.py
 
-Real-world validation harness (Phase 3). Submits a batch of jobs (ideally
-trace-replayed, not synthetic), calls the classifier service to route each
-one, dispatches a CPU-bound benchmark to the chosen instance via AWS SSM
-send-command, and records real wall-clock completion time -- so you can
-reproduce your Table 9 methodology (mean/peak improvement, paired t-test) on
-REAL data instead of CloudSim's simulated units.
-
-Requires: boto3, an AWS profile with SSM permissions, and the Terraform
-outputs (instance IDs) from `terraform output -json`.
-
-Usage:
-    python orchestrate.py --terraform-outputs outputs.json --n-jobs 50 \
-        --classifier-url http://<classifier_ip>:5000/classify \
-        --mode hpnts   # or --mode fcfs for the baseline comparison run
-"""
 import argparse
 import json
 import time
@@ -26,8 +9,6 @@ import boto3
 
 BENCHMARK_SCRIPT = """
 #!/bin/bash
-# Stand-in "Cloudlet": busy-loop scaled to target MI, so wall-clock time is
-# comparable across runs. Replace with a real workload kernel if you have one.
 python3 -c "
 import time
 target_seconds = {duration}
@@ -52,8 +33,6 @@ def classify_job(classifier_url, features):
 
 
 def dispatch_and_time(ssm_client, instance_id, duration_seconds):
-    """Runs the benchmark on the target instance via SSM RunCommand and
-    measures real wall-clock time from dispatch to completion."""
     start = time.time()
     resp = ssm_client.send_command(
         InstanceIds=[instance_id],
@@ -72,9 +51,6 @@ def dispatch_and_time(ssm_client, instance_id, duration_seconds):
 
 
 def generate_job_batch(n_jobs, seed=0):
-    """Placeholder job generator -- replace with trace-replayed rows
-    (cpu_request, mem_request, duration_norm, io_intensity) drawn from the
-    same sample used in classifier/train_classifier.py for consistency."""
     rng = random.Random(seed)
     jobs = []
     for _ in range(n_jobs):
@@ -99,7 +75,7 @@ def main():
 
     tf_out = load_terraform_outputs(args.terraform_outputs)
     flat_ids = tf_out["flat_vm_ids"]["value"]
-    nested_host_id = tf_out["nested_host_id"]["value"]  # containers dispatched via docker exec on this host
+    nested_host_id = tf_out["nested_host_id"]["value"]
 
     ssm = boto3.client("ssm", region_name="us-east-1")
     jobs = generate_job_batch(args.n_jobs)
@@ -117,7 +93,6 @@ def main():
                 flat_idx += 1
         elif args.mode == "drl_tans":
             cls = classify_job(args.classifier_url, job)
-            # DRL-TANS adaptive scheduling: route HPC tasks dynamically to least-loaded flat VM
             target_id = flat_ids[flat_idx % len(flat_ids)] if cls["class"] == "HPC" else nested_host_id
             if cls["class"] == "HPC":
                 flat_idx += 1
